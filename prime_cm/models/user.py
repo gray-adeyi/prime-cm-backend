@@ -1,4 +1,7 @@
 from pydantic import BaseModel
+from sqlalchemy import null
+from tortoise.models import Model
+from tortoise import fields
 import enum
 from typing import Optional, List
 
@@ -76,4 +79,52 @@ class User(BaseUser):
     is the model for Prime customers. ie.
     the Photographer.
     """
-    business_name = Optional[str]
+    business_name: Optional[str]
+
+
+class AdminUserORM(Model):
+    id = fields.IntField(pk=True, generated=True)
+    firstname = fields.CharField(max_length=50, null=True)
+    lastname = fields.CharField(max_length=50, null=True)
+    email = fields.CharField(max_length=150, null=True)
+    phone_number = fields.CharField(max_length=15, null=False)
+    addresss = fields.TextField(null=True)
+    gender = fields.CharEnumField(enum_type=Gender)
+    religion = fields.CharEnumField(enum_type=Religion)
+    level = fields.IntEnumField(enum_type=Level)
+    hashed_password = fields.CharField(max_length=255, null=False)
+
+    class Meta:
+        table = "admins"
+
+
+class AdminOtherNumberORM(Model):
+    admin = fields.ForeignKeyField(
+        model_name="models.AdminUserORM", related_name='other_numbers')
+    number = fields.CharField(max_length=15)
+
+    class Meta:
+        table = "admin_other_numbers"
+
+
+class UserORM(Model):
+    id = fields.IntField(pk=True, generated=True)
+    firstname = fields.CharField(max_length=50, null=True)
+    lastname = fields.CharField(max_length=50, null=True)
+    email = fields.CharField(max_length=150, null=True)
+    phone_number = fields.CharField(max_length=15, null=False)
+    addresss = fields.TextField(null=True)
+    gender = fields.CharEnumField(enum_type=Gender)
+    religion = fields.CharEnumField(enum_type=Religion)
+
+    class Meta:
+        table = "customers"
+
+
+class UserOtherNumberORM(Model):
+    user = fields.ForeignKeyField(
+        model_name="models.UserORM", related_name='other_numbers')
+    number = fields.CharField(max_length=15)
+
+    class Meta:
+        table = "customers_other_numbers"
