@@ -1,9 +1,10 @@
-from pydantic import BaseModel
-from sqlalchemy import null
+from pydantic import BaseModel, Field
+from datetime import datetime
 from tortoise.models import Model
 from tortoise import fields
 import enum
 from typing import Optional, List
+import uuid
 
 
 class UserType(str, enum.Enum):
@@ -39,6 +40,9 @@ class OtherNumber(BaseModel):
     """
     number: str
 
+    class Config:
+        orm_mode = True
+
 
 class BaseUser(BaseModel):
     """
@@ -52,7 +56,6 @@ class BaseUser(BaseModel):
     email: Optional[str]  # TODO: Use email validator
     # TODO: Make this the unique field for identification of `User`, This field is required.
     phone_number: str
-    other_number: Optional[List[OtherNumber]]
     address: Optional[str]
     gender: Optional[Gender]
     religion: Optional[Religion]
@@ -64,7 +67,34 @@ class AdminUser(BaseUser):
     Prime CM console via
     authentication.
     """
+    id: Optional[int]
     level: Level
+
+    class Config:
+        orm_mode = True
+
+
+class AdminUserCreate(AdminUser):
+    password: str
+
+
+def get_expiration_date() -> datetime:
+    # TODO: Provide expiration_date in the future
+    return datetime.now()
+
+
+def generate_token() -> str:
+    # TODO: Implement a better token generator
+    return str(uuid.uuid4())
+
+
+class AccessToken(BaseModel):
+    admin_id: Optional[int]
+    access_token: str = Field(default_factory=generate_token)
+    expiration_date: datetime = Field(default_factory=get_expiration_date)
+
+    class Config:
+        orm_mode = True
 
 
 class AdminUserDB(AdminUser):
@@ -89,8 +119,8 @@ class AdminUserORM(Model):
     email = fields.CharField(max_length=150, null=True)
     phone_number = fields.CharField(max_length=15, null=False)
     addresss = fields.TextField(null=True)
-    gender = fields.CharEnumField(enum_type=Gender)
-    religion = fields.CharEnumField(enum_type=Religion)
+    gender = fields.CharEnumField(enum_type=Gender, null=True)
+    religion = fields.CharEnumField(enum_type=Religion, null=True)
     level = fields.IntEnumField(enum_type=Level)
     hashed_password = fields.CharField(max_length=255, null=False)
 
@@ -99,8 +129,9 @@ class AdminUserORM(Model):
 
 
 class AdminOtherNumberORM(Model):
+    id = fields.IntField(pk=True, generated=True)
     admin = fields.ForeignKeyField(
-        model_name="models.AdminUserORM", related_name='other_numbers')
+        model_name="models.AdminUserORM", related_name='other_numbers', on_delete=fields.CASCADE)
     number = fields.CharField(max_length=15)
 
     class Meta:
@@ -122,9 +153,19 @@ class UserORM(Model):
 
 
 class UserOtherNumberORM(Model):
+    id = fields.IntField(pk=True, generated=True)
     user = fields.ForeignKeyField(
-        model_name="models.UserORM", related_name='other_numbers')
+        model_name="models.UserORM", related_name='other_numbers', on_delete=fields.CASCADE)
     number = fields.CharField(max_length=15)
 
     class Meta:
         table = "customers_other_numbers"
+
+
+class AccessTokenORM(Model):
+    access_token = fields.CharField(pk=True, max_length=255)
+    admin = fields.ForeignKeyField("models.AdminUserORM", null=False)
+    expiration_date = fields.DatetimeField(null=False)
+
+    class Meta:
+        table = "access_tokens"
