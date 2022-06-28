@@ -36,5 +36,5 @@ async def create_access_token(admin: AdminUser) -> AccessToken:
     # TODO: Stop generating new tokens if they already exist
     # in the Database
     access_token = AccessToken(admin_id=admin.id)
-    access_token_obj = await AccessTokenORM.create(**access_token.dict())
+    access_token_obj, _ = await AccessTokenORM.get_or_create(**access_token.dict())
     return AccessToken.from_orm(access_token_obj)

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlalchemy import null
 from tortoise.models import Model
 from tortoise import fields
@@ -81,8 +81,8 @@ class AdminUserCreate(BaseUser):
 
 
 def get_expiration_date() -> datetime:
-    # TODO: Provide expiration_date in the future
-    return datetime.now()
+    # expires 24hrs after token creation.
+    return datetime.now() + timedelta(hours=24)
 
 
 def generate_token() -> str:

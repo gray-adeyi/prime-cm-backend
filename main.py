@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from tortoise.contrib.fastapi import register_tortoise
 from prime_cm.routers.user import router as ur
+from prime_cm.routers.booking import router as br
 
 app = FastAPI()
 
@@ -22,6 +23,7 @@ async def index():
     }
 
 app.include_router(ur)
+app.include_router(br)
 
 TORTOISE_ORM = {
     "connections": {"default": "sqlite://./db.sqlite3"},
@@ -29,6 +31,7 @@ TORTOISE_ORM = {
         "models": {
             "models": [
                 "prime_cm.models.user",
+                "prime_cm.models.booking",
             ],
             "default_connection": "default"
         }

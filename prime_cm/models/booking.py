@@ -2,8 +2,8 @@ from decimal import Decimal
 import enum
 from typing import List
 from pydantic import BaseModel
-from datetime import datetime
-from models.user import User
+from datetime import datetime, date
+from .user import User
 from tortoise import fields, models
 
 
@@ -26,37 +26,34 @@ class Booking(BaseModel):
     Models a customer (`User` instance)
     booking.
     """
-    paper_type: PaperType
-    paper_size: PaperSize
-    rate: float
-    copies: int
+    paper_type: PaperType = PaperType.LUSTRE
+    paper_size: PaperSize = PaperSize.FIVE_BY_SEVEN
+    rate: float = 50
+    copies: int = 1
     at: datetime
 
 
 class Transaction(BaseModel):
     customer: User
     bookings: List[Booking]
-    at: datetime
+    at: date
 
     class Config:
         orm_mode = True
-
-
-class TransactionCreate(BaseModel):
-    customer: User
 
 
 class TransactionORM(models.Model):
     id = fields.IntField(pk=True, generated=True)
     customer = fields.ForeignKeyField(
         'models.UserORM', on_delete='CASCADE', related_name='transactions')
-    at = fields.DatetimeField(auto_now_add=True)
+    at = fields.DateField(auto_now_add=True, unique=True)
 
     class Meta:
         table = 'transactions'
 
 
 class BookingORM(models.Model):
+    id = fields.IntField(pk=True, generated=True)
     transaction = fields.ForeignKeyField(
         'models.TransactionORM', on_delete='CASCADE', related_name='bookings')
     paper_type = fields.CharEnumField(
