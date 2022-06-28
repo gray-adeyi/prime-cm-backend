@@ -7,6 +7,7 @@ from prime_cm.models.user import (
     AdminUserORM,
     AccessToken
 )
+from tortoise.exceptions import DoesNotExist
 
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
@@ -22,7 +23,7 @@ def get_password_hash(password: str) -> str:
 async def authenticate(phone_number: str, password: str) -> Optional[AdminUser]:
     try:
         admin = await AdminUserORM.get(phone_number=phone_number)
-    except AdminUserORM.DoesNotExist:
+    except DoesNotExist:
         return None
 
     if not verify_password(password, admin.hashed_password):

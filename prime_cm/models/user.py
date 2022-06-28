@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 from datetime import datetime
+from sqlalchemy import null
 from tortoise.models import Model
 from tortoise import fields
 import enum
@@ -74,7 +75,8 @@ class AdminUser(BaseUser):
         orm_mode = True
 
 
-class AdminUserCreate(AdminUser):
+class AdminUserCreate(BaseUser):
+    level: Level
     password: str
 
 
@@ -111,6 +113,9 @@ class User(BaseUser):
     """
     business_name: Optional[str]
 
+    class Config:
+        orm_mode = True
+
 
 class AdminUserORM(Model):
     id = fields.IntField(pk=True, generated=True)
@@ -144,9 +149,10 @@ class UserORM(Model):
     lastname = fields.CharField(max_length=50, null=True)
     email = fields.CharField(max_length=150, null=True)
     phone_number = fields.CharField(max_length=15, null=False)
-    addresss = fields.TextField(null=True)
-    gender = fields.CharEnumField(enum_type=Gender)
-    religion = fields.CharEnumField(enum_type=Religion)
+    address = fields.TextField(null=True)
+    gender = fields.CharEnumField(enum_type=Gender, null=True)
+    religion = fields.CharEnumField(enum_type=Religion, null=True)
+    business_name = fields.CharField(max_length=200, null=True)
 
     class Meta:
         table = "customers"
